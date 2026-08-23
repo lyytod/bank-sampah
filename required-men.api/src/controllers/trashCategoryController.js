@@ -54,7 +54,14 @@ const TrashCategoryController = {
   // ==========================================================
   async getAll(req, res) {
     try {
-      const categories = await TrashCategoryModel.findAll();
+      let categories;
+      // Jika request punya ?all=true dan user adalah admin, ambil semua data
+      // Jika tidak, hanya ambil yang is_active = 1
+      if (req.query.all === 'true' && (req.user.role === 'admin' || req.user.role === 'super_admin')) {
+        categories = await TrashCategoryModel.findAll();
+      } else {
+        categories = await TrashCategoryModel.findAllActive();
+      }
 
       return res.status(200).json({
         success: true,
@@ -171,6 +178,54 @@ const TrashCategoryController = {
       });
     } catch (error) {
       console.error('Delete Category Error:', error);
+      // Foreign Key Error handling
+      if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+        return res.status(400).json({
+          success: false,
+          message: 'Kategori tidak dapat dihapus karena sudah ada riwayat transaksi yang menggunakan kategori ini. Silakan nonaktifkan (toggle off) kategori ini sebagai gantinya.',
+          data: null,
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan server',
+        data: null,
+      });
+    }
+  },
+
+  // ==========================================================
+  // PATCH /api/trash-categories/:id/toggle — Toggle Kategori Aktif
+  // ==========================================================
+  async toggleActive(req, res) {
+    try {
+      const existing = await TrashCategoryModel.findById(req.params.id);
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          message: 'Kategori tidak ditemukan',
+          data: null,
+        });
+      }
+
+      const { is_active } = req.body;
+      if (typeof is_active !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          message: 'Parameter is_active harus berupa boolean',
+          data: null,
+        });
+      }
+
+      await TrashCategoryModel.toggleActive(req.params.id, is_active);
+
+      return res.status(200).json({
+        success: true,
+        message: `Kategori berhasil di-${is_active ? 'aktifkan' : 'nonaktifkan'}`,
+        data: null,
+      });
+    } catch (error) {
+      console.error('Toggle Category Error:', error);
       return res.status(500).json({
         success: false,
         message: 'Terjadi kesalahan server',

@@ -1,11 +1,9 @@
 // ============================================================
 // src/models/userModel.js — Database Queries untuk Tabel `users`
 // ============================================================
-// Model HANYA bertanggung jawab untuk operasi database (CRUD).
-// Tidak ada business logic di sini — itu tugas Service layer.
-//
-// Semua method return Promise karena menggunakan mysql2/promise.
-// Pemanggil cukup pakai: const user = await UserModel.findByEmail(email);
+// Model ini menangani interaksi langsung dengan tabel users.
+// Update Fase 1: Menambahkan dukungan untuk field `status`, 
+// `google_id`, dan pengelolaan role (user, admin, super_admin).
 // ============================================================
 
 const db = require('../config/db');
@@ -13,57 +11,65 @@ const db = require('../config/db');
 const UserModel = {
   // ---------- CREATE ----------
   // Menyimpan user baru ke database.
-  // Parameter `userData` berisi: { name, email, password (sudah di-hash), role }
-  // Mengembalikan result object dari MySQL (berisi insertId, affectedRows, dll)
+  // Mendukung pendaftaran manual (password) atau via Google OAuth.
   async create(userData) {
-    const { name, email, password, role } = userData;
+    const { name, email, password, role = 'user', google_id = null } = userData;
     const sql = `
-      INSERT INTO users (name, email, password, role, balance)
-      VALUES (?, ?, ?, ?, 0)
+      INSERT INTO users (name, email, password, role, status, balance, google_id)
+      VALUES (?, ?, ?, ?, 'active', 0, ?)
     `;
-    // db.execute() menggunakan prepared statement secara otomatis.
-    // Tanda '?' akan di-replace dengan nilai dari array parameter.
-    // Ini MENCEGAH SQL Injection karena nilai di-escape oleh MySQL driver.
-    const [result] = await db.execute(sql, [name, email, password, role]);
+    const [result] = await db.execute(sql, [name, email, password, role, google_id]);
     return result;
   },
 
   // ---------- READ: Cari berdasarkan Email ----------
-  // Digunakan saat login untuk memverifikasi kredensial.
-  // Digunakan juga saat register untuk cek duplikasi email.
-  // Return: object user LENGKAP (termasuk password hash) atau undefined
+  // Digunakan untuk verifikasi login dan cek duplikasi email.
   async findByEmail(email) {
     const sql = `SELECT * FROM users WHERE email = ?`;
     const [rows] = await db.execute(sql, [email]);
-    return rows[0]; // rows adalah array, ambil elemen pertama (atau undefined)
+    return rows[0];
   },
 
   // ---------- READ: Cari berdasarkan ID ----------
-  // Digunakan setelah JWT di-decode untuk mendapatkan data user lengkap.
-  // TIDAK mengembalikan password untuk keamanan (SELECT tanpa password).
+  // Mengambil data user untuk request profile atau saat verifikasi token.
   async findById(id) {
-    const sql = `SELECT id, name, email, role, balance, created_at FROM users WHERE id = ?`;
+    const sql = `SELECT id, name, email, role, status, balance, google_id, created_at FROM users WHERE id = ?`;
     const [rows] = await db.execute(sql, [id]);
     return rows[0];
   },
 
-  // ---------- READ: Ambil Semua User ----------
-  // Hanya diakses oleh admin untuk melihat daftar nasabah.
-  // Password TIDAK disertakan dalam hasil query.
+  // ---------- READ: Ambil Semua User (Khusus Admin/Super Admin) ----------
+  // Mengambil daftar seluruh user (kecuali password) untuk fitur manajemen akun.
   async findAll() {
-    const sql = `SELECT id, name, email, role, balance, created_at FROM users ORDER BY created_at DESC`;
+    const sql = `SELECT id, name, email, role, status, balance, google_id, created_at FROM users ORDER BY created_at DESC`;
     const [rows] = await db.execute(sql);
     return rows;
   },
 
-  // ---------- UPDATE: Perbarui Saldo Nasabah ----------
-  // Dipanggil setelah transaksi setor sampah selesai.
-  // `amount` adalah jumlah yang DITAMBAHKAN ke saldo saat ini.
+  // ---------- UPDATE: Perbarui Saldo ----------
+  // Dipanggil setelah transaksi setoran/penarikan disetujui.
+  // amount positif untuk setoran, negatif untuk penarikan.
   async updateBalance(userId, amount) {
     const sql = `UPDATE users SET balance = balance + ? WHERE id = ?`;
     const [result] = await db.execute(sql, [amount, userId]);
     return result;
   },
+
+  // ---------- UPDATE: Perbarui Status (Suspend / Active) ----------
+  // Khusus Super Admin: Untuk suspend atau mengaktifkan kembali akun.
+  async updateStatus(userId, newStatus) {
+    const sql = `UPDATE users SET status = ? WHERE id = ?`;
+    const [result] = await db.execute(sql, [newStatus, userId]);
+    return result;
+  },
+
+  // ---------- UPDATE: Perbarui Role ----------
+  // Khusus Super Admin
+  async updateRole(userId, newRole) {
+    const sql = `UPDATE users SET role = ? WHERE id = ?`;
+    const [result] = await db.execute(sql, [newRole, userId]);
+    return result;
+  }
 };
 
 module.exports = UserModel;

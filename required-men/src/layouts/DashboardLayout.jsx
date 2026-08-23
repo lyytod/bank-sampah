@@ -30,27 +30,25 @@ const DashboardLayout = ({ children }) => {
   };
 
   // ---------- Menu Items berdasarkan Role ----------
-  // Admin punya menu lebih banyak daripada nasabah
   const menuItems = [
     {
-      label: 'Dashboard',
-      path: '/dashboard',
-      icon: '📊',
-      roles: ['admin', 'nasabah'],
+      label: 'Dashboard Nasabah',
+      path: '/user',
+      icon: '👤',
+      roles: ['user'],
     },
-    // Menu tambahan bisa ditambahkan di sini nanti
-    // {
-    //   label: 'Kategori Sampah',
-    //   path: '/categories',
-    //   icon: '🗂️',
-    //   roles: ['admin'],
-    // },
-    // {
-    //   label: 'Transaksi',
-    //   path: '/transactions',
-    //   icon: '💰',
-    //   roles: ['admin', 'nasabah'],
-    // },
+    {
+      label: 'Dashboard Admin',
+      path: '/admin',
+      icon: '📊',
+      roles: ['admin', 'super_admin'],
+    },
+    {
+      label: 'Super Admin',
+      path: '/superadmin',
+      icon: '⚙️',
+      roles: ['super_admin'],
+    },
   ].filter((item) => item.roles.includes(user?.role));
   // .filter() hanya menampilkan menu sesuai role user yang login
 

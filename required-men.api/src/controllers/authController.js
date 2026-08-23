@@ -102,6 +102,15 @@ const AuthController = {
         // untuk mencegah enumeration attack (penyerang menebak email valid)
       }
 
+      // STEP 2.5: Cek apakah akun di-suspend
+      if (user.status === 'suspended') {
+        return res.status(403).json({
+          success: false,
+          message: 'Akun Anda telah ditangguhkan. Silakan hubungi administrator.',
+          data: null,
+        });
+      }
+
       // STEP 3: Bandingkan plain password dengan hash di database
       const isPasswordValid = await AuthService.comparePassword(
         validatedData.password,
@@ -171,6 +180,14 @@ const AuthController = {
         });
       }
 
+      if (user.status === 'suspended') {
+        return res.status(403).json({
+          success: false,
+          message: 'Akun Anda telah ditangguhkan.',
+          data: null,
+        });
+      }
+
       return res.status(200).json({
         success: true,
         message: 'Profil berhasil diambil',
@@ -185,6 +202,56 @@ const AuthController = {
       });
     }
   },
+
+  // ==========================================================
+  // POST /api/auth/forgot-password — Dummy Forgot Password
+  // ==========================================================
+  async forgotPassword(req, res) {
+    try {
+      const validatedData = AuthService.validateForgotPassword(req.body);
+      
+      const user = await UserModel.findByEmail(validatedData.email);
+      if (!user) {
+        // Return 200 sukses MESKIPUN email tidak ditemukan 
+        // (Security best practice: Mencegah attacker mengetahui email mana yang terdaftar)
+        return res.status(200).json({
+          success: true,
+          message: 'Jika email terdaftar, instruksi reset password telah dikirim.',
+          data: null,
+        });
+      }
+
+      // Generate dummy token
+      const resetToken = AuthService.generateResetToken(user);
+      
+      // DUMMY: Di production, kirim resetToken via Email di sini.
+      console.log(`[DUMMY EMAIL SENT] Reset Password Token untuk ${user.email}: ${resetToken}`);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Jika email terdaftar, instruksi reset password telah dikirim.',
+        data: {
+          dummy_token_for_dev: resetToken // Dihapus di production
+        },
+      });
+    } catch (error) {
+      if (error.name === 'ZodError') {
+        const messages = error.errors.map((e) => e.message).join(', ');
+        return res.status(400).json({
+          success: false,
+          message: messages,
+          data: null,
+        });
+      }
+
+      console.error('Forgot Password Error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Terjadi kesalahan server',
+        data: null,
+      });
+    }
+  }
 };
 
 module.exports = AuthController;

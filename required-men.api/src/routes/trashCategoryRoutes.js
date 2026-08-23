@@ -28,8 +28,9 @@ router.get('/:id', TrashCategoryController.getById);
 
 // ---------- Routes khusus Admin ----------
 // authorizeRole('admin') memastikan hanya admin yang bisa CRUD data master
-router.post('/', authorizeRole('admin'), TrashCategoryController.create);
-router.put('/:id', authorizeRole('admin'), TrashCategoryController.update);
-router.delete('/:id', authorizeRole('admin'), TrashCategoryController.delete);
+router.post('/', authorizeRole('admin', 'super_admin'), TrashCategoryController.create);
+router.put('/:id', authorizeRole('admin', 'super_admin'), TrashCategoryController.update);
+router.patch('/:id/toggle', authorizeRole('admin', 'super_admin'), TrashCategoryController.toggleActive);
+router.delete('/:id', authorizeRole('admin', 'super_admin'), TrashCategoryController.delete);
 
 module.exports = router;

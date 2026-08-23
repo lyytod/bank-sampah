@@ -17,6 +17,7 @@ require('dotenv').config();
 // ---------- 2. Import Dependencies ----------
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 // ---------- 3. Inisialisasi Express App ----------
 const app = express();
@@ -31,6 +32,9 @@ app.use(cors());
 // express.json() → Mem-parse request body berformat JSON secara otomatis.
 //                  Tanpa ini, req.body akan undefined saat menerima POST/PUT request.
 app.use(express.json());
+
+// Serve static files (untuk folder public/uploads tempat foto disimpan)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // ---------- 5. Health Check Route ----------
 // Route sederhana untuk memastikan server berjalan.
@@ -47,13 +51,16 @@ app.get('/', (req, res) => {
 // Import route modules
 const authRoutes = require('./routes/authRoutes');
 const trashCategoryRoutes = require('./routes/trashCategoryRoutes');
-const transactionRoutes = require('./routes/transactionRoutes');
+const depositRoutes = require('./routes/depositRoutes');
+const withdrawalRoutes = require('./routes/withdrawalRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Mount routes dengan prefix URL
-// Setiap route module di-mount dengan prefix yang mencerminkan resource-nya
-app.use('/api/auth', authRoutes);                       // /api/auth/register, /login, /me
-app.use('/api/trash-categories', trashCategoryRoutes);  // /api/trash-categories CRUD
-app.use('/api/transactions', transactionRoutes);        // /api/transactions CRUD + /complete
+app.use('/api/auth', authRoutes);
+app.use('/api/trash-categories', trashCategoryRoutes);
+app.use('/api/deposits', depositRoutes);
+app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/users', userRoutes);
 
 // ---------- 7. Global Error Handler ----------
 // Middleware dengan 4 parameter (err, req, res, next) dikenali Express

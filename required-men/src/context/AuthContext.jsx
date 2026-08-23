@@ -14,15 +14,12 @@
 // Data disimpan di localStorage agar tetap ada setelah refresh browser.
 // ============================================================
 
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // 1. Buat Context object
-// Context ini akan menjadi "wadah" untuk data auth global
 const AuthContext = createContext(null);
 
-// 2. Custom hook untuk mengakses AuthContext
-// Komponen cukup panggil: const { user, token, login, logout } = useAuth();
-// Lebih clean daripada: const context = useContext(AuthContext);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -31,12 +28,9 @@ export const useAuth = () => {
   return context;
 };
 
-// 3. Provider component — membungkus seluruh app
-// Semua komponen di dalam <AuthProvider> bisa mengakses auth state
 export const AuthProvider = ({ children }) => {
-  // ---------- State ----------
-  // Inisialisasi state dari localStorage (jika ada)
-  // Ini memungkinkan user tetap login setelah refresh browser
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -46,23 +40,30 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('token') || null;
   });
 
-  // ---------- Login ----------
-  // Dipanggil setelah API login berhasil
-  // Menyimpan data ke state DAN localStorage
+  // ---------- Login & Auto-Routing ----------
   const login = (userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
     localStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('token', jwtToken);
+
+    // Auto-Routing berdasarkan Role
+    if (userData.role === 'super_admin') {
+      navigate('/superadmin', { replace: true });
+    } else if (userData.role === 'admin') {
+      navigate('/admin', { replace: true });
+    } else {
+      navigate('/user', { replace: true });
+    }
   };
 
   // ---------- Logout ----------
-  // Membersihkan semua data auth
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    navigate('/login', { replace: true });
   };
 
   // ---------- Value yang di-share ke seluruh app ----------

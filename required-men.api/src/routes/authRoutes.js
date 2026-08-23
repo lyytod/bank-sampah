@@ -20,9 +20,17 @@ const AuthController = require('../controllers/authController');
 const { verifyToken } = require('../middleware/authMiddleware');
 
 // ---------- Public Routes (Tidak perlu login) ----------
-// Register dan Login harus bisa diakses tanpa token
+// POST /api/auth/register
+// Endpoint terbuka (tanpa token) untuk mendaftar
 router.post('/register', AuthController.register);
+
+// POST /api/auth/login
+// Endpoint terbuka untuk mendapatkan token
 router.post('/login', AuthController.login);
+
+// POST /api/auth/forgot-password
+// Endpoint terbuka untuk reset password
+router.post('/forgot-password', AuthController.forgotPassword);
 
 // ---------- Protected Routes (Harus login) ----------
 // verifyToken memastikan request membawa JWT valid

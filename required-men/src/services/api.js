@@ -112,6 +112,10 @@ export const authAPI = {
   // Response: { token, user: { id, name, email, role, balance } }
   login: (data) => api.post('/auth/login', data),
 
+  // POST /api/auth/forgot-password
+  // Body: { email }
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+
   // GET /api/auth/me
   // Header: Authorization: Bearer <token> (otomatis via interceptor)
   // Response: { id, name, email, role, balance, created_at }
@@ -121,7 +125,7 @@ export const authAPI = {
 // ---------- Trash Categories API ----------
 export const trashCategoryAPI = {
   // GET /api/trash-categories
-  getAll: () => api.get('/trash-categories'),
+  getAll: (all = false) => api.get(`/trash-categories${all ? '?all=true' : ''}`),
 
   // GET /api/trash-categories/:id
   getById: (id) => api.get(`/trash-categories/${id}`),
@@ -133,6 +137,10 @@ export const trashCategoryAPI = {
   // PUT /api/trash-categories/:id (Admin only)
   // Body: { name, price_per_kg }
   update: (id, data) => api.put(`/trash-categories/${id}`, data),
+
+  // PATCH /api/trash-categories/:id/toggle (Admin only)
+  // Body: { is_active: boolean }
+  toggleActive: (id, is_active) => api.patch(`/trash-categories/${id}/toggle`, { is_active }),
 
   // DELETE /api/trash-categories/:id (Admin only)
   delete: (id) => api.delete(`/trash-categories/${id}`),
@@ -155,6 +163,56 @@ export const transactionAPI = {
   // PATCH /api/transactions/:id/complete (Admin only)
   // Mengubah status pending → completed dan update saldo nasabah
   complete: (id) => api.patch(`/transactions/${id}/complete`),
+};
+
+// ---------- Deposits API ----------
+export const depositAPI = {
+  // GET /api/deposits (Admin)
+  getAll: () => api.get('/deposits'),
+
+  // GET /api/deposits/my (Nasabah)
+  getMyDeposits: () => api.get('/deposits/my'),
+
+  // POST /api/deposits (Multipart Form Data)
+  create: (formData) => api.post('/deposits', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
+
+  // PATCH /api/deposits/:id/status (Admin)
+  // Body: { status: 'approved' | 'rejected' }
+  updateStatus: (id, status) => api.patch(`/deposits/${id}/status`, { status }),
+};
+
+// ---------- Withdrawals API ----------
+export const withdrawalAPI = {
+  // GET /api/withdrawals (Admin)
+  getAll: () => api.get('/withdrawals'),
+
+  // GET /api/withdrawals/my (Nasabah)
+  getMyWithdrawals: () => api.get('/withdrawals/my'),
+
+  // POST /api/withdrawals (Nasabah)
+  create: (data) => api.post('/withdrawals', data),
+
+  // PATCH /api/withdrawals/:id/status (Admin)
+  // Body: { status: 'approved' | 'rejected' }
+  updateStatus: (id, status) => api.patch(`/withdrawals/${id}/status`, { status }),
+};
+
+// ---------- Users API (Super Admin) ----------
+export const userAPI = {
+  // GET /api/users
+  getAll: () => api.get('/users'),
+
+  // PATCH /api/users/:id/role
+  // Body: { role: 'user' | 'admin' | 'super_admin' }
+  updateRole: (id, role) => api.patch(`/users/${id}/role`, { role }),
+
+  // PATCH /api/users/:id/status
+  // Body: { status: 'active' | 'suspended' }
+  updateStatus: (id, status) => api.patch(`/users/${id}/status`, { status }),
 };
 
 // Export Axios instance sebagai default (untuk kasus custom request)

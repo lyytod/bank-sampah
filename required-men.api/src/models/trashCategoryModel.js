@@ -20,10 +20,16 @@ const TrashCategoryModel = {
     return result;
   },
 
-  // ---------- READ: Semua Kategori ----------
-  // Digunakan di frontend untuk dropdown pilihan kategori saat transaksi
+  // ---------- READ: Semua Kategori (Admin) ----------
   async findAll() {
     const sql = `SELECT * FROM trash_categories ORDER BY name ASC`;
+    const [rows] = await db.execute(sql);
+    return rows;
+  },
+
+  // ---------- READ: Kategori Aktif Saja (Nasabah) ----------
+  async findAllActive() {
+    const sql = `SELECT * FROM trash_categories WHERE is_active = 1 ORDER BY name ASC`;
     const [rows] = await db.execute(sql);
     return rows;
   },
@@ -51,6 +57,13 @@ const TrashCategoryModel = {
   async delete(id) {
     const sql = `DELETE FROM trash_categories WHERE id = ?`;
     const [result] = await db.execute(sql, [id]);
+    return result;
+  },
+
+  // ---------- TOGGLE ACTIVE ----------
+  async toggleActive(id, isActive) {
+    const sql = `UPDATE trash_categories SET is_active = ? WHERE id = ?`;
+    const [result] = await db.execute(sql, [isActive ? 1 : 0, id]);
     return result;
   },
 };

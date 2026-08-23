@@ -3,31 +3,23 @@
 // ============================================================
 // Middleware ini "menjaga pintu" sebelum request sampai ke controller.
 //
-// Dua middleware tersedia:
-// 1. verifyToken  → Memastikan user sudah login (punya token valid)
-// 2. authorizeRole → Memastikan user punya role yang tepat (admin/nasabah)
-//
-// Cara kerja di Express:
-//   router.get('/protected', verifyToken, authorizeRole('admin'), controller)
-//   Request harus melewati verifyToken DAN authorizeRole sebelum masuk controller.
+// Update Fase 1: 
+// - verifyToken: Ditambahkan pengecekan database secara real-time 
+//   untuk mengeblok akses jika akun user di-suspend.
+// - authorizeRole: Disesuaikan untuk struktur 3 Role (user, admin, super_admin).
 // ============================================================
 
 const AuthService = require('../services/authService');
+const UserModel = require('../models/userModel');
 
-// ---------- Middleware 1: Verifikasi JWT Token ----------
-// Mengecek apakah request membawa token JWT yang valid di header.
-//
-// Format header yang diharapkan:
-//   Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
-//
-// Jika valid: req.user diisi dengan decoded payload, lalu next()
-// Jika invalid: return 401 Unauthorized
-const verifyToken = (req, res, next) => {
+// ---------- Middleware 1: Verifikasi JWT Token & Status Akun ----------
+// Mengecek apakah request membawa token JWT yang valid.
+// Jika valid, akan mengecek ke database apakah akun dalam status 'active'.
+// Jika 'suspended', akses langsung ditolak.
+const verifyToken = async (req, res, next) => {
   try {
-    // Ambil header Authorization
     const authHeader = req.headers.authorization;
 
-    // Cek apakah header ada dan formatnya benar (Bearer <token>)
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
@@ -36,22 +28,36 @@ const verifyToken = (req, res, next) => {
       });
     }
 
-    // Pisahkan "Bearer" dari token-nya
-    // "Bearer eyJhbG..." → split(' ') → ["Bearer", "eyJhbG..."] → ambil index [1]
     const token = authHeader.split(' ')[1];
-
-    // Verifikasi dan decode token menggunakan AuthService
-    // Jika token expired atau invalid, jwt.verify() akan throw error
+    
+    // Verifikasi dan decode token (throws error if invalid/expired)
     const decoded = AuthService.verifyToken(token);
 
-    // Simpan data user dari token ke req.user
-    // Sekarang controller bisa akses req.user.id dan req.user.role
-    req.user = decoded;
+    // Cek status terbaru user dari database secara real-time
+    const currentUser = await UserModel.findById(decoded.id);
+    
+    if (!currentUser) {
+      return res.status(401).json({
+        success: false,
+        message: 'User tidak ditemukan. Token tidak valid.',
+        data: null,
+      });
+    }
 
-    // Lanjut ke middleware/controller berikutnya
+    // Blokir jika statusnya suspended
+    if (currentUser.status === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        message: 'Akses ditolak. Akun Anda telah ditangguhkan (suspended).',
+        data: null,
+      });
+    }
+
+    // Simpan data user terbaru ke req.user agar bisa dipakai controller
+    req.user = currentUser;
+
     next();
   } catch (error) {
-    // Token expired
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
@@ -60,7 +66,6 @@ const verifyToken = (req, res, next) => {
       });
     }
 
-    // Token tidak valid (di-tamper, salah secret, format rusak)
     return res.status(401).json({
       success: false,
       message: 'Token tidak valid.',
@@ -74,21 +79,19 @@ const verifyToken = (req, res, next) => {
 // Menerima daftar role yang DIIZINKAN mengakses route.
 //
 // Contoh penggunaan:
-//   authorizeRole('admin')            → hanya admin
-//   authorizeRole('admin', 'nasabah') → admin DAN nasabah
+//   authorizeRole('super_admin')             → hanya super admin
+//   authorizeRole('admin', 'super_admin')    → admin & super admin
 //
-// HARUS dipanggil SETELAH verifyToken, karena butuh req.user.role
+// HARUS dipanggil SETELAH verifyToken
 const authorizeRole = (...allowedRoles) => {
   return (req, res, next) => {
-    // req.user.role sudah diisi oleh verifyToken dari JWT payload
+    // req.user sudah diisi oleh verifyToken dari database
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: 'Anda tidak memiliki izin untuk mengakses resource ini.',
         data: null,
       });
-      // 403 Forbidden = user terautentikasi TAPI tidak punya hak akses
-      // Berbeda dengan 401 Unauthorized = user belum terautentikasi
     }
     next();
   };
