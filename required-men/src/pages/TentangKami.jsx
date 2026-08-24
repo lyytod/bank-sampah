@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { publicAPI } from '../services/api';
-import { FaFacebook, FaInstagram, FaWhatsapp } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaWhatsapp, FaTiktok } from 'react-icons/fa';
 
 const TentangKami = () => {
   // States
@@ -210,6 +210,9 @@ const TentangKami = () => {
               </a>
               <a href="#" aria-label="WhatsApp" className="w-14 h-14 rounded-full bg-white border border-secondary-200 flex items-center justify-center text-secondary-500 hover:text-emerald-500 hover:border-emerald-300 hover:shadow-lg hover:-translate-y-1 transition-all text-2xl">
                 <FaWhatsapp />
+              </a>
+              <a href="#" aria-label="TikTok" className="w-14 h-14 rounded-full bg-white border border-secondary-200 flex items-center justify-center text-secondary-500 hover:text-black hover:border-black hover:shadow-lg hover:-translate-y-1 transition-all text-2xl">
+                <FaTiktok />
               </a>
             </div>
           </div>
