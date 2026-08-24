@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 const Homepage = () => {
   const { isAuthenticated, user } = useAuth();
@@ -7,55 +9,8 @@ const Homepage = () => {
   return (
     <div className="min-h-screen bg-secondary-50 font-sans selection:bg-primary-500 selection:text-white">
       {/* ====== NAVBAR ====== */}
-      <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-secondary-200 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <span className="text-3xl">♻️</span>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
-                Bank Sampah Digital
-              </span>
-            </div>
+      <Navbar />
 
-            {/* Nav Links (Desktop) */}
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#fitur" className="text-secondary-600 hover:text-primary-600 font-medium transition-colors">Fitur</a>
-              <a href="#cara-kerja" className="text-secondary-600 hover:text-primary-600 font-medium transition-colors">Cara Kerja</a>
-              <a href="#tentang" className="text-secondary-600 hover:text-primary-600 font-medium transition-colors">Tentang Kami</a>
-            </div>
-
-            {/* Auth Buttons */}
-            <div className="flex items-center gap-4">
-              {isAuthenticated ? (
-                <Link
-                  to={user?.role === 'super_admin' ? '/superadmin' : user?.role === 'admin' ? '/admin' : '/user'}
-                  className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-500/30 transform hover:-translate-y-0.5 transition-all"
-                >
-                  Dashboard ({user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin' : 'Nasabah'})
-                </Link>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="hidden md:block px-5 py-2.5 text-primary-600 font-semibold hover:bg-primary-50 rounded-xl transition-all"
-                  >
-                    Masuk
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-500/30 transform hover:-translate-y-0.5 transition-all"
-                  >
-                    Daftar Sekarang
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* ====== HERO SECTION ====== */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         {/* Background Decorative Elements */}
         <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3">
@@ -71,18 +26,18 @@ const Homepage = () => {
               <span className="flex h-2 w-2 rounded-full bg-primary-500 animate-pulse"></span>
               Platform Daur Ulang Modern
             </div>
-            
+
             <h1 className="text-5xl md:text-7xl font-extrabold text-secondary-900 tracking-tight mb-8 leading-tight">
               Ubah Sampah Menjadi <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-emerald-500">
                 Nilai Ekonomis
               </span>
             </h1>
-            
+
             <p className="text-xl text-secondary-600 mb-10 max-w-2xl mx-auto leading-relaxed">
               Bergabunglah dengan ribuan nasabah lainnya. Kumpulkan sampah yang bisa didaur ulang, setorkan, dan nikmati keuntungan finansial sekaligus menyelamatkan bumi kita.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               {isAuthenticated ? (
                 <Link
@@ -102,7 +57,7 @@ const Homepage = () => {
                 </Link>
               )}
               <a
-                href="#fitur"
+                href="#cara-kerja"
                 className="w-full sm:w-auto px-8 py-4 bg-white text-secondary-700 font-bold rounded-2xl hover:bg-secondary-50 shadow-sm border border-secondary-200 transform hover:-translate-y-1 transition-all text-center"
               >
                 Pelajari Lebih Lanjut
@@ -160,8 +115,8 @@ const Homepage = () => {
       {/* ====== CALL TO ACTION ====== */}
       <section className="py-20 bg-secondary-900 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-           {/* Placeholder for an eco pattern/grid */}
-           <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
+          {/* Placeholder for an eco pattern/grid */}
+          <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
         </div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Siap Menjadi Pahlawan Lingkungan?</h2>
@@ -188,18 +143,7 @@ const Homepage = () => {
         </div>
       </section>
 
-      {/* ====== FOOTER ====== */}
-      <footer className="bg-white border-t border-secondary-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">♻️</span>
-            <span className="text-lg font-bold text-secondary-900">Bank Sampah Digital</span>
-          </div>
-          <p className="text-secondary-500 text-sm">
-            &copy; {new Date().getFullYear()} Bank Sampah Digital. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

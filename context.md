@@ -45,10 +45,3 @@ Setiap kali login, backend merespons dengan `token` dan `role`. Frontend menggun
 4. **File Upload:** Untuk setoran yang butuh foto, gunakan middleware `multer` di Express.js, simpan di folder `public/uploads`.
 5. **Efisien Kode:** Jangan hapus kode yang sudah ada kecuali diminta. Modifikasi file yang sudah ada (`App.jsx`, `api.js`) sesuai kebutuhan fase.
 
-## 5. Roadmap Eksekusi (Fase Development)
-- **Fase 1 (DB & Middleware):** Modifikasi MySQL schema, update Model User, buat Auth & Role Middleware, update config database.
-- **Fase 2 (Auth Engine):** Buat backend & frontend untuk Login, Register (termasuk persiapan Google OAuth), Forgot Password, dan implementasi routing/redirect berdasarkan Role.
-- **Fase 3 (Public UI):** Buat Homepage yang menarik sebagai halaman awal aplikasi (pengganti Login sebagai halaman pertama).
-- **Fase 4 (User Core):** Buat fitur User (Dashboard, form input setoran + upload foto, riwayat saldo, form request withdraw).
-- **Fase 5 (Admin Core):** Buat fitur Admin (Validasi setoran user, validasi withdraw, CRUD kategori & harga sampah).
-- **Fase 6 (Super Admin Core):** Buat fitur Super Admin (Manajemen user/admin list, suspend akun, setting minimum balance).

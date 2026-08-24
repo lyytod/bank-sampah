@@ -164,6 +164,13 @@ export const locationAPI = {
   delete: (id) => api.delete(`/locations/${id}`),
 };
 
+// ---------- Public API ----------
+export const publicAPI = {
+  getStats: () => api.get('/public/stats'),
+  getCategories: (page = 1, limit = 10) => api.get(`/public/categories?page=${page}&limit=${limit}`),
+  getLocations: () => api.get('/public/locations'),
+};
+
 // ---------- Transactions API ----------
 export const transactionAPI = {
   // GET /api/transactions

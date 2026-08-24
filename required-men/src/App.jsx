@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // ---------- Import Pages ----------
 import Homepage from './pages/Homepage';
+import CaraKerja from './pages/CaraKerja';
+import TentangKami from './pages/TentangKami';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -46,6 +48,8 @@ function App() {
         <Routes>
           {/* ====== PUBLIC ROUTES ====== */}
           <Route path="/" element={<Homepage />} />
+          <Route path="/cara-kerja" element={<CaraKerja />} />
+          <Route path="/tentang-kami" element={<TentangKami />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
