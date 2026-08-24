@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { depositAPI, withdrawalAPI, trashCategoryAPI } from '../services/api';
+import { depositAPI, withdrawalAPI, trashCategoryAPI, locationAPI } from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 
 const AdminDashboard = () => {
@@ -9,9 +9,11 @@ const AdminDashboard = () => {
   const [deposits, setDeposits] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
   
-  // Form State for Category
+  // Form State for Category & Location
   const [categoryForm, setCategoryForm] = useState({ id: null, name: '', price_per_kg: '' });
+  const [locationForm, setLocationForm] = useState({ id: null, name: '', address: '', maps_link: '' });
   
   // UI State
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +37,9 @@ const AdminDashboard = () => {
       } else if (activeTab === 'categories') {
         const res = await trashCategoryAPI.getAll(true); // ?all=true
         setCategories(res.data.data);
+      } else if (activeTab === 'locations') {
+        const res = await locationAPI.getAll(true); // ?all=true
+        setLocations(res.data.data);
       }
     } catch (error) {
       setFeedback({ type: 'error', message: 'Gagal mengambil data' });
@@ -121,6 +126,60 @@ const AdminDashboard = () => {
     }
   };
 
+  // --- Handlers for Locations ---
+  const handleLocationSubmit = async (e) => {
+    e.preventDefault();
+    if (!locationForm.name || !locationForm.address) return;
+
+    try {
+      if (locationForm.id) {
+        await locationAPI.update(locationForm.id, {
+          name: locationForm.name,
+          address: locationForm.address,
+          maps_link: locationForm.maps_link
+        });
+        setFeedback({ type: 'success', message: 'Lokasi berhasil diupdate' });
+      } else {
+        await locationAPI.create({
+          name: locationForm.name,
+          address: locationForm.address,
+          maps_link: locationForm.maps_link
+        });
+        setFeedback({ type: 'success', message: 'Lokasi berhasil ditambahkan' });
+      }
+      setLocationForm({ id: null, name: '', address: '', maps_link: '' });
+      fetchData();
+    } catch (error) {
+      setFeedback({ type: 'error', message: error.response?.data?.message || 'Gagal menyimpan lokasi' });
+    }
+  };
+
+  const handleEditLocation = (loc) => {
+    setLocationForm({ id: loc.id, name: loc.name, address: loc.address, maps_link: loc.maps_link });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleToggleLocation = async (id, currentStatus) => {
+    try {
+      await locationAPI.toggleActive(id, !currentStatus);
+      setFeedback({ type: 'success', message: 'Status lokasi berhasil diubah' });
+      fetchData();
+    } catch (error) {
+      setFeedback({ type: 'error', message: error.response?.data?.message || 'Gagal mengubah status lokasi' });
+    }
+  };
+
+  const handleDeleteLocation = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus lokasi ini secara permanen? Jika sudah ada nasabah yang setor di sini, proses akan gagal. Sebaiknya gunakan Toggle Nonaktif.')) return;
+    try {
+      await locationAPI.delete(id);
+      setFeedback({ type: 'success', message: 'Lokasi berhasil dihapus' });
+      fetchData();
+    } catch (error) {
+      setFeedback({ type: 'error', message: error.response?.data?.message || 'Gagal menghapus lokasi' });
+    }
+  };
+
   // --- Renders ---
   const renderDeposits = () => (
     <div className="bg-white rounded-3xl shadow-sm border border-secondary-200 p-8">
@@ -133,7 +192,7 @@ const AdminDashboard = () => {
             <thead className="bg-secondary-50 text-secondary-600 font-medium">
               <tr>
                 <th className="py-3 px-4 rounded-l-xl">Tanggal</th>
-                <th className="py-3 px-4">Nasabah</th>
+                <th className="py-3 px-4">Nasabah & Lokasi</th>
                 <th className="py-3 px-4">Kategori & Berat</th>
                 <th className="py-3 px-4">Est. Nilai</th>
                 <th className="py-3 px-4">Bukti</th>
@@ -148,6 +207,7 @@ const AdminDashboard = () => {
                   <td className="py-3 px-4">
                     <div className="font-medium text-secondary-900">{dep.user_name}</div>
                     <div className="text-xs text-secondary-500">{dep.user_email}</div>
+                    <div className="text-xs text-primary-600 mt-1">📍 {dep.location_name}</div>
                   </td>
                   <td className="py-3 px-4">
                     <span className="font-medium">{dep.category_name}</span>
@@ -328,6 +388,115 @@ const AdminDashboard = () => {
     </div>
   );
 
+  const renderLocations = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Form Tambah/Edit Lokasi */}
+      <div className="lg:col-span-1">
+        <div className="bg-white rounded-3xl shadow-sm border border-secondary-200 p-8 sticky top-8">
+          <h2 className="text-xl font-bold text-secondary-800 mb-6">
+            {locationForm.id ? 'Edit Lokasi' : 'Tambah Lokasi Baru'}
+          </h2>
+          <form onSubmit={handleLocationSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-1">Nama Lokasi</label>
+              <input
+                type="text"
+                required
+                value={locationForm.name}
+                onChange={(e) => setLocationForm({...locationForm, name: e.target.value})}
+                className="w-full px-4 py-2 bg-secondary-50 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                placeholder="Cth: Bank Sampah Pusat"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-1">Alamat Lengkap</label>
+              <textarea
+                required
+                rows="3"
+                value={locationForm.address}
+                onChange={(e) => setLocationForm({...locationForm, address: e.target.value})}
+                className="w-full px-4 py-2 bg-secondary-50 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none resize-none"
+                placeholder="Cth: Jl. Sudirman No. 1"
+              ></textarea>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-1">Link Google Maps (Opsional)</label>
+              <input
+                type="url"
+                value={locationForm.maps_link}
+                onChange={(e) => setLocationForm({...locationForm, maps_link: e.target.value})}
+                className="w-full px-4 py-2 bg-secondary-50 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+                placeholder="Cth: https://goo.gl/maps/..."
+              />
+            </div>
+            <div className="pt-2 flex gap-2">
+              <button type="submit" disabled={isLoading} className="flex-1 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 disabled:opacity-50">
+                {locationForm.id ? 'Update' : 'Simpan'}
+              </button>
+              {locationForm.id && (
+                <button type="button" onClick={() => setLocationForm({ id: null, name: '', address: '', maps_link: '' })} className="px-4 py-2.5 bg-secondary-200 text-secondary-700 font-semibold rounded-xl hover:bg-secondary-300">
+                  Batal
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Tabel Daftar Lokasi */}
+      <div className="lg:col-span-2">
+        <div className="bg-white rounded-3xl shadow-sm border border-secondary-200 p-8">
+          <h2 className="text-xl font-bold text-secondary-800 mb-6">Daftar Lokasi Bank Sampah</h2>
+          {locations.length === 0 ? (
+            <p className="text-secondary-500">Belum ada data lokasi.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-secondary-50 text-secondary-600 font-medium">
+                  <tr>
+                    <th className="py-3 px-4 rounded-l-xl">Info Lokasi</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 rounded-r-xl">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-secondary-100">
+                  {locations.map(loc => (
+                    <tr key={loc.id} className="hover:bg-secondary-50">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-secondary-900">{loc.name}</div>
+                        <div className="text-xs text-secondary-500 mt-1 truncate max-w-xs">{loc.address}</div>
+                        {loc.maps_link && (
+                          <a href={loc.maps_link} target="_blank" rel="noreferrer" className="text-xs text-primary-600 hover:underline mt-1 block">
+                            Buka di Maps &nearr;
+                          </a>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <button 
+                          onClick={() => handleToggleLocation(loc.id, loc.is_active)}
+                          className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${loc.is_active ? 'bg-primary-600' : 'bg-secondary-300'}`}
+                        >
+                          <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${loc.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                        <span className="ml-2 text-xs text-secondary-500">{loc.is_active ? 'Aktif' : 'Nonaktif'}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button onClick={() => handleEditLocation(loc)} className="px-3 py-1 bg-secondary-100 text-secondary-700 rounded hover:bg-secondary-200">Edit</button>
+                          <button onClick={() => handleDeleteLocation(loc.id)} className="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">Hapus</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto pb-12">
@@ -348,6 +517,7 @@ const AdminDashboard = () => {
             { id: 'deposits', label: 'Validasi Setoran' },
             { id: 'withdrawals', label: 'Validasi Penarikan' },
             { id: 'categories', label: 'Kategori Sampah' },
+            { id: 'locations', label: 'Lokasi Bank Sampah' },
           ].map(tab => (
             <button
               key={tab.id}
@@ -373,6 +543,7 @@ const AdminDashboard = () => {
             {activeTab === 'deposits' && renderDeposits()}
             {activeTab === 'withdrawals' && renderWithdrawals()}
             {activeTab === 'categories' && renderCategories()}
+            {activeTab === 'locations' && renderLocations()}
           </div>
         )}
 

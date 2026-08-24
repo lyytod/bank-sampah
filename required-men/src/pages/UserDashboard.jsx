@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { depositAPI, withdrawalAPI, trashCategoryAPI } from '../services/api';
+import { depositAPI, withdrawalAPI, trashCategoryAPI, locationAPI } from '../services/api';
 import DashboardLayout from '../layouts/DashboardLayout';
 
 const UserDashboard = () => {
@@ -11,13 +11,14 @@ const UserDashboard = () => {
 
   // State for Data
   const [categories, setCategories] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [deposits, setDeposits] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
 
   // Form State
-  const [depositForm, setDepositForm] = useState({ category_id: '', weight: '', photo: null });
+  const [depositForm, setDepositForm] = useState({ category_id: '', location_id: '', weight: '', photo: null });
   const [withdrawForm, setWithdrawForm] = useState({ amount: '', bank_name: '', account_number: '' });
 
   // Initial Data Fetch
@@ -28,10 +29,14 @@ const UserDashboard = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await trashCategoryAPI.getAll();
-      setCategories(res.data.data);
+      const [catRes, locRes] = await Promise.all([
+        trashCategoryAPI.getAll(),
+        locationAPI.getAll() // Mengambil lokasi aktif saja
+      ]);
+      setCategories(catRes.data.data);
+      setLocations(locRes.data.data);
     } catch (error) {
-      console.error("Gagal mengambil kategori", error);
+      console.error("Gagal mengambil data referensi", error);
     }
   };
 
@@ -51,8 +56,8 @@ const UserDashboard = () => {
   // Handlers
   const handleDepositSubmit = async (e) => {
     e.preventDefault();
-    if (!depositForm.category_id || !depositForm.weight) {
-      setFeedback({ type: 'error', message: 'Kategori dan berat wajib diisi' });
+    if (!depositForm.category_id || !depositForm.location_id || !depositForm.weight) {
+      setFeedback({ type: 'error', message: 'Kategori, lokasi, dan berat wajib diisi' });
       return;
     }
 
@@ -61,6 +66,7 @@ const UserDashboard = () => {
 
     const formData = new FormData();
     formData.append('category_id', depositForm.category_id);
+    formData.append('location_id', depositForm.location_id);
     formData.append('weight', depositForm.weight);
     if (depositForm.photo) {
       formData.append('photo', depositForm.photo);
@@ -69,7 +75,7 @@ const UserDashboard = () => {
     try {
       await depositAPI.create(formData);
       setFeedback({ type: 'success', message: 'Setoran berhasil disubmit dan menunggu validasi admin.' });
-      setDepositForm({ category_id: '', weight: '', photo: null });
+      setDepositForm({ category_id: '', location_id: '', weight: '', photo: null });
       fetchHistory(); // Refresh history
     } catch (error) {
       setFeedback({ type: 'error', message: error.response?.data?.message || 'Terjadi kesalahan saat menyubmit setoran.' });
@@ -138,6 +144,19 @@ const UserDashboard = () => {
             <option value="">Pilih Kategori</option>
             {categories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name} - Rp {cat.price_per_kg.toLocaleString('id-ID')}/kg</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-secondary-700 mb-2">Lokasi Bank Sampah</label>
+          <select 
+            value={depositForm.location_id}
+            onChange={(e) => setDepositForm({...depositForm, location_id: e.target.value})}
+            className="w-full px-4 py-3 bg-secondary-50 border border-secondary-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+          >
+            <option value="">Pilih Lokasi</option>
+            {locations.map(loc => (
+              <option key={loc.id} value={loc.id}>{loc.name}</option>
             ))}
           </select>
         </div>
@@ -236,6 +255,7 @@ const UserDashboard = () => {
             <thead className="bg-secondary-50 text-secondary-600 font-medium">
               <tr>
                 <th className="py-3 px-4 rounded-l-xl">Tanggal</th>
+                <th className="py-3 px-4">Lokasi</th>
                 <th className="py-3 px-4">Kategori</th>
                 <th className="py-3 px-4">Berat</th>
                 <th className="py-3 px-4">Estimasi Harga</th>
@@ -246,6 +266,7 @@ const UserDashboard = () => {
               {deposits.map(dep => (
                 <tr key={dep.id} className="hover:bg-secondary-50">
                   <td className="py-3 px-4">{new Date(dep.created_at).toLocaleDateString('id-ID')}</td>
+                  <td className="py-3 px-4 text-xs text-secondary-500">📍 {dep.location_name}</td>
                   <td className="py-3 px-4 font-medium">{dep.category_name}</td>
                   <td className="py-3 px-4">{dep.weight} kg</td>
                   <td className="py-3 px-4 text-primary-600 font-medium">Rp {parseFloat(dep.estimated_subtotal).toLocaleString('id-ID')}</td>

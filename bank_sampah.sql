@@ -37,21 +37,35 @@ CREATE TABLE `trash_categories` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- 3. Tabel deposits (Setoran Sampah oleh User)
+-- 3. Tabel locations (Lokasi Bank Sampah)
+CREATE TABLE `locations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `address` text NOT NULL,
+  `maps_link` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 4. Tabel deposits (Setoran Sampah oleh User)
 -- (Menggantikan tabel transactions dan transaction_details)
 CREATE TABLE deposits (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
+  location_id INT NOT NULL,
   category_id INT NOT NULL,
   weight DECIMAL(10,2) NOT NULL,
   photo_url VARCHAR(255) NULL,
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (category_id) REFERENCES trash_categories(id)
+  FOREIGN KEY (category_id) REFERENCES trash_categories(id),
+  FOREIGN KEY (location_id) REFERENCES locations(id)
 );
 
--- 4. Tabel withdrawals (Penarikan Saldo oleh User)
+-- 5. Tabel withdrawals (Penarikan Saldo oleh User)
 CREATE TABLE withdrawals (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -65,7 +79,7 @@ CREATE TABLE withdrawals (
   FOREIGN KEY (processed_by) REFERENCES users(id)
 );
 
--- 5. Tabel system_settings (Pengaturan Dinamis Aplikasi)
+-- 6. Tabel system_settings (Pengaturan Dinamis Aplikasi)
 CREATE TABLE system_settings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   setting_key VARCHAR(100) NOT NULL UNIQUE,
@@ -93,3 +107,7 @@ INSERT INTO trash_categories (name, price_per_kg) VALUES
 ('Plastik Botol', 3500.00),
 ('Kertas Kardus', 2000.00),
 ('Besi Tua', 5000.00);
+
+-- Insert Lokasi Default
+INSERT INTO locations (name, address, maps_link) VALUES 
+('Bank Sampah Pusat', 'Jl. Jenderal Sudirman No. 1, Jakarta', 'https://goo.gl/maps/example');

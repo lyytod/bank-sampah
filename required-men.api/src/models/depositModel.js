@@ -3,23 +3,25 @@ const db = require('../config/db');
 const DepositModel = {
   // CREATE: Buat setoran baru (status 'pending' by default)
   async create(data) {
-    const { user_id, category_id, weight, photo_url } = data;
+    const { user_id, category_id, location_id, weight, photo_url } = data;
     const sql = `
-      INSERT INTO deposits (user_id, category_id, weight, photo_url, status)
-      VALUES (?, ?, ?, ?, 'pending')
+      INSERT INTO deposits (user_id, category_id, location_id, weight, photo_url, status)
+      VALUES (?, ?, ?, ?, ?, 'pending')
     `;
-    const [result] = await db.execute(sql, [user_id, category_id, weight, photo_url]);
+    const [result] = await db.execute(sql, [user_id, category_id, location_id, weight, photo_url]);
     return result;
   },
 
-  // READ: Dapatkan semua setoran milik user tertentu (dengan detail kategori)
+  // READ: Dapatkan semua setoran milik user tertentu (dengan detail kategori & lokasi)
   async findByUserId(userId) {
     const sql = `
       SELECT d.id, d.weight, d.photo_url, d.status, d.created_at, 
              c.name as category_name, c.price_per_kg,
+             l.name as location_name,
              (d.weight * c.price_per_kg) as estimated_subtotal
       FROM deposits d
       JOIN trash_categories c ON d.category_id = c.id
+      JOIN locations l ON d.location_id = l.id
       WHERE d.user_id = ?
       ORDER BY d.created_at DESC
     `;
@@ -32,10 +34,12 @@ const DepositModel = {
     const sql = `
       SELECT d.id, d.weight, d.photo_url, d.status, d.created_at, 
              c.name as category_name, c.price_per_kg,
+             l.name as location_name,
              u.name as user_name, u.email as user_email,
              (d.weight * c.price_per_kg) as estimated_subtotal
       FROM deposits d
       JOIN trash_categories c ON d.category_id = c.id
+      JOIN locations l ON d.location_id = l.id
       JOIN users u ON d.user_id = u.id
       ORDER BY d.created_at DESC
     `;
@@ -46,9 +50,10 @@ const DepositModel = {
   // READ: Dapatkan setoran berdasarkan ID
   async findById(id) {
     const sql = `
-      SELECT d.*, c.price_per_kg, (d.weight * c.price_per_kg) as estimated_subtotal
+      SELECT d.*, c.price_per_kg, l.name as location_name, (d.weight * c.price_per_kg) as estimated_subtotal
       FROM deposits d
       JOIN trash_categories c ON d.category_id = c.id
+      JOIN locations l ON d.location_id = l.id
       WHERE d.id = ?
     `;
     const [rows] = await db.execute(sql, [id]);

@@ -5,14 +5,13 @@ const DepositController = {
   // POST /api/deposits
   async createDeposit(req, res) {
     try {
-      const { category_id, weight } = req.body;
-      const user_id = req.user.id; // Didapatkan dari JWT token (authMiddleware)
+      const { category_id, location_id, weight } = req.body;
+      const user_id = req.user.id; // Didapat dari authMiddleware
 
-      // Validasi sederhana
-      if (!category_id || !weight) {
+      if (!category_id || !location_id || !weight) {
         return res.status(400).json({
           success: false,
-          message: 'Kategori sampah dan berat wajib diisi',
+          message: 'Kategori, lokasi, dan berat wajib diisi',
           data: null
         });
       }
@@ -35,9 +34,11 @@ const DepositController = {
       }
 
       // Simpan deposit ke DB
+      // Panggil Model untuk insert
       const result = await DepositModel.create({
         user_id,
         category_id,
+        location_id,
         weight: parseFloat(weight),
         photo_url
       });

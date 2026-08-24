@@ -146,6 +146,24 @@ export const trashCategoryAPI = {
   delete: (id) => api.delete(`/trash-categories/${id}`),
 };
 
+// ---------- Location API ----------
+export const locationAPI = {
+  // GET /api/locations
+  getAll: (all = false) => api.get(`/locations${all ? '?all=true' : ''}`),
+
+  // POST /api/locations
+  create: (data) => api.post('/locations', data),
+
+  // PUT /api/locations/:id
+  update: (id, data) => api.put(`/locations/${id}`, data),
+
+  // PATCH /api/locations/:id/toggle
+  toggleActive: (id, is_active) => api.patch(`/locations/${id}/toggle`, { is_active }),
+
+  // DELETE /api/locations/:id
+  delete: (id) => api.delete(`/locations/${id}`),
+};
+
 // ---------- Transactions API ----------
 export const transactionAPI = {
   // GET /api/transactions

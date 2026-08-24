@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Homepage = () => {
+  const { isAuthenticated, user } = useAuth();
+
   return (
     <div className="min-h-screen bg-secondary-50 font-sans selection:bg-primary-500 selection:text-white">
       {/* ====== NAVBAR ====== */}
@@ -24,18 +27,29 @@ const Homepage = () => {
 
             {/* Auth Buttons */}
             <div className="flex items-center gap-4">
-              <Link
-                to="/login"
-                className="hidden md:block px-5 py-2.5 text-primary-600 font-semibold hover:bg-primary-50 rounded-xl transition-all"
-              >
-                Masuk
-              </Link>
-              <Link
-                to="/register"
-                className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-500/30 transform hover:-translate-y-0.5 transition-all"
-              >
-                Daftar Sekarang
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  to={user?.role === 'super_admin' ? '/superadmin' : user?.role === 'admin' ? '/admin' : '/user'}
+                  className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-500/30 transform hover:-translate-y-0.5 transition-all"
+                >
+                  Dashboard ({user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin' : 'Nasabah'})
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="hidden md:block px-5 py-2.5 text-primary-600 font-semibold hover:bg-primary-50 rounded-xl transition-all"
+                  >
+                    Masuk
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-500/30 transform hover:-translate-y-0.5 transition-all"
+                  >
+                    Daftar Sekarang
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -70,13 +84,23 @@ const Homepage = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <Link
-                to="/register"
-                className="w-full sm:w-auto px-8 py-4 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-500/30 transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
-              >
-                Mulai Menabung
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  to={user?.role === 'super_admin' ? '/superadmin' : user?.role === 'admin' ? '/admin' : '/user'}
+                  className="w-full sm:w-auto px-8 py-4 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-500/30 transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
+                >
+                  Buka Dashboard
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </Link>
+              ) : (
+                <Link
+                  to="/register"
+                  className="w-full sm:w-auto px-8 py-4 bg-primary-600 text-white font-bold rounded-2xl hover:bg-primary-700 shadow-xl shadow-primary-500/30 transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
+                >
+                  Mulai Menabung
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </Link>
+              )}
               <a
                 href="#fitur"
                 className="w-full sm:w-auto px-8 py-4 bg-white text-secondary-700 font-bold rounded-2xl hover:bg-secondary-50 shadow-sm border border-secondary-200 transform hover:-translate-y-1 transition-all text-center"
@@ -144,13 +168,23 @@ const Homepage = () => {
           <p className="text-xl text-secondary-300 mb-10 leading-relaxed">
             Pendaftaran 100% gratis. Mulai pilah sampah dari rumah dan rasakan manfaat finansialnya.
           </p>
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-3 px-8 py-4 bg-primary-500 text-white font-bold rounded-2xl hover:bg-primary-400 shadow-xl shadow-primary-500/30 transform hover:scale-105 transition-all"
-          >
-            Buat Akun Gratis Sekarang
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              to={user?.role === 'super_admin' ? '/superadmin' : user?.role === 'admin' ? '/admin' : '/user'}
+              className="inline-flex items-center gap-3 px-8 py-4 bg-primary-500 text-white font-bold rounded-2xl hover:bg-primary-400 shadow-xl shadow-primary-500/30 transform hover:scale-105 transition-all"
+            >
+              Kembali ke Dashboard
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </Link>
+          ) : (
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-primary-500 text-white font-bold rounded-2xl hover:bg-primary-400 shadow-xl shadow-primary-500/30 transform hover:scale-105 transition-all"
+            >
+              Buat Akun Gratis Sekarang
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </Link>
+          )}
         </div>
       </section>
 

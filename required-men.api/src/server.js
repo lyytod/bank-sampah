@@ -54,6 +54,7 @@ const trashCategoryRoutes = require('./routes/trashCategoryRoutes');
 const depositRoutes = require('./routes/depositRoutes');
 const withdrawalRoutes = require('./routes/withdrawalRoutes');
 const userRoutes = require('./routes/userRoutes');
+const locationRoutes = require('./routes/locationRoutes');
 
 // Mount routes dengan prefix URL
 app.use('/api/auth', authRoutes);
@@ -61,6 +62,7 @@ app.use('/api/trash-categories', trashCategoryRoutes);
 app.use('/api/deposits', depositRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/locations', locationRoutes);
 
 // ---------- 7. Global Error Handler ----------
 // Middleware dengan 4 parameter (err, req, res, next) dikenali Express
